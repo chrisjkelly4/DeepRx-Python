@@ -2,8 +2,7 @@ import sionna
 import config
 import utils
 import numpy as np
-import tensorflow as tf
-import sionna.phy.channel.tr38901 as channel
+from sionna.phy.channel.tr38901 import Antenna, AntennaArray, CDL, TDL
 import sionna.phy.ofdm as phy
 import h5py
 import torch
@@ -19,7 +18,8 @@ ofdm_resource_grid = sionna.phy.ofdm.ResourceGrid(num_ofdm_symbols=config.NUM_OF
                                                       dc_null=False,
                                                       pilot_pattern='kronecker',
                                                       pilot_ofdm_symbol_indices=[2, 11],
-                                                      precision=None)
+                                                      precision=None,
+                                                    device = 'cuda')
 
 mapper = sionna.phy.mapping.Mapper(constellation_type='qam', num_bits_per_symbol=4)
 
@@ -27,19 +27,17 @@ mapper = sionna.phy.mapping.Mapper(constellation_type='qam', num_bits_per_symbol
 #Deep Rx uses SIMO so we set the Base Station (bs_array) to only have 1x1
 # And the user terminal(ut_array) the user terminal to have a 1x2 dimensionality
 
-bs_array = channel.PanelArray(num_rows_per_panel = 1,
-                      num_cols_per_panel = 1,
-                      polarization = 'dual',
-                      polarization_type = 'cross',
-                      antenna_pattern = '38.901',
-                      carrier_frequency = 3.5e9)
+bs_array = AntennaArray(
+    antenna=Antenna(pattern="38.901", polarization="dual"),
+    num_rows=1,
+    num_cols=1,
+)
+ut_array = AntennaArray(
+    antenna=Antenna(pattern="omni", polarization="single"),
+    num_rows=1,
+    num_cols=config.N_RX,
+)
 
-ut_array = channel.PanelArray(num_rows_per_panel = 1,
-                      num_cols_per_panel = config.N_RX,
-                      polarization = 'single',
-                      polarization_type = 'V',
-                      antenna_pattern = 'omni',
-                      carrier_frequency = 3.5e9)
 
 def generate_channel_model(gen_type, rms_delay_spread, max_speed):
     if gen_type == 'val':
@@ -52,7 +50,7 @@ def generate_channel_model(gen_type, rms_delay_spread, max_speed):
 
     if 'TDL' in selected_model:
 
-        tdl = channel.TDL(model=selected_model[-1],
+        tdl = TDL(model=selected_model[-1],
                           delay_spread=rms_delay_spread,
                           carrier_frequency=config.CARRIER_FREQ_HZ,
                           min_speed=0.0,
@@ -61,7 +59,7 @@ def generate_channel_model(gen_type, rms_delay_spread, max_speed):
         channel_model = tdl
 
     else:
-        cdl = channel.CDL(model=selected_model[-1],
+        cdl = CDL(model=selected_model[-1],
                   delay_spread=rms_delay_spread,
                   carrier_frequency=config.CARRIER_FREQ_HZ,
                   ut_array=ut_array,
@@ -105,14 +103,14 @@ def generate_batch():
     bit_pattern = np.random.randint(0, 2, size=num_bits)
 
     # 2.1 Map to tensor
-    bit_pattern_tensor = tf.convert_to_tensor(bit_pattern)
+    bit_pattern_tensor = torch.tensor(bit_pattern)
 
-    bit_pattern_tensor = tf.reshape(bit_pattern_tensor, [1, -1])  # add batch dimension
+    bit_pattern_tensor = torch.reshape(bit_pattern_tensor, [1, -1])  # add batch dimension
 
     # 3. Map tensor to QAM symbols
 
     symbols = mapper(bit_pattern_tensor)
-    symbols = tf.reshape(symbols, [1, 1, 1, -1])  # [batch, tx, streams, symbols]
+    symbols = torch.reshape(symbols, [1, 1, 1, -1])  # [batch, tx, streams, symbols]
 
     # 4. create OFDM grid with DMRS pilots
 
@@ -128,10 +126,10 @@ def generate_batch():
     pilots = ofdm_resource_grid.pilot_pattern.pilots
 
     # Reshape mask to (14, 312)
-    mask = tf.squeeze(mask)
+    mask = torch.squeeze(mask)
 
     # Create Xp - zeros everywhere except pilot positions
-    Xp = tf.cast(mask, tf.complex64)
+    Xp = mask.to(torch.complex64)
 
     return Y, Xp, bit_pattern
 
