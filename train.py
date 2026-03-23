@@ -54,7 +54,7 @@ def train_model(max_iterations):
             if iteration % 100 == 0:
                 print(f"Iteration {iteration}/{max_iterations}, Loss: {loss_val.item()}")
         if iteration % 5 == 0:  # save every 5 epochs - a checkpoint
-            torch.save(deepRx_model.state_dict(), f'deeprx_checkpoint_epoch{i}.pt')
+            torch.save(deepRx_model.state_dict(), f'deeprx_checkpoint_iteration{iteration}.pt')
 
             
 if __name__ == '__main__':
