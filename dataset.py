@@ -6,37 +6,41 @@ from sionna.phy.channel.tr38901 import Antenna, AntennaArray, CDL, TDL
 import sionna.phy.ofdm as phy
 import h5py
 import torch
+import time
 
 # Define Necessary Sionna Components
 ofdm_resource_grid = sionna.phy.ofdm.ResourceGrid(num_ofdm_symbols=config.NUM_OFDM_SYMBOLS,
-                                                      fft_size=config.FFT_SIZE,
-                                                      subcarrier_spacing=config.SUBCARRIER_SPACING_HZ,
-                                                      num_tx=1,
-                                                      num_streams_per_tx=1,
-                                                      cyclic_prefix_length=config.CYCLIC_PREFIX,
-                                                      num_guard_carriers=(0, 0),
-                                                      dc_null=False,
-                                                      pilot_pattern='kronecker',
-                                                      pilot_ofdm_symbol_indices=[2, 11],
-                                                      precision=None,
-                                                    device = 'cuda')
+                                                  fft_size=config.FFT_SIZE,
+                                                  subcarrier_spacing=config.SUBCARRIER_SPACING_HZ,
+                                                  num_tx=1,
+                                                  num_streams_per_tx=1,
+                                                  cyclic_prefix_length=config.CYCLIC_PREFIX,
+                                                  num_guard_carriers=(0, 0),
+                                                  dc_null=False,
+                                                  pilot_pattern='kronecker',
+                                                  pilot_ofdm_symbol_indices=[2, 11],
+                                                  precision=None,
+                                                  device='cuda:0')
 
 mapper = sionna.phy.mapping.Mapper(constellation_type='qam', num_bits_per_symbol=4)
 
 # Panel array configuration for the transmitter and receiver
-#Deep Rx uses SIMO so we set the Base Station (bs_array) to only have 1x1
+# Deep Rx uses SIMO so we set the Base Station (bs_array) to only have 1x1
 # And the user terminal(ut_array) the user terminal to have a 1x2 dimensionality
 
-bs_array = AntennaArray(
-    antenna=Antenna(pattern="38.901", polarization="dual"),
-    num_rows=1,
-    num_cols=1,
-)
-ut_array = AntennaArray(
-    antenna=Antenna(pattern="omni", polarization="single"),
-    num_rows=1,
-    num_cols=config.N_RX,
-)
+bs_array = AntennaArray(num_rows=1,
+                        num_cols=1,
+                        polarization='dual',
+                        polarization_type='cross',
+                        antenna_pattern='38.901',
+                        carrier_frequency=3.5e9)
+
+ut_array = AntennaArray(num_rows=1,
+                        num_cols=config.N_RX,
+                        polarization='single',
+                        polarization_type='V',
+                        antenna_pattern='omni',
+                        carrier_frequency=3.5e9)
 
 
 def generate_channel_model(gen_type, rms_delay_spread, max_speed):
@@ -51,11 +55,11 @@ def generate_channel_model(gen_type, rms_delay_spread, max_speed):
     if 'TDL' in selected_model:
 
         tdl = TDL(model=selected_model[-1],
-                          delay_spread=rms_delay_spread,
-                          carrier_frequency=config.CARRIER_FREQ_HZ,
-                          min_speed=0.0,
-                          max_speed=max_speed,
-                          num_rx_ant=config.N_RX)
+                  delay_spread=rms_delay_spread,
+                  carrier_frequency=config.CARRIER_FREQ_HZ,
+                  min_speed=0.0,
+                  max_speed=max_speed,
+                  num_rx_ant=config.N_RX)
         channel_model = tdl
 
     else:
@@ -67,9 +71,7 @@ def generate_channel_model(gen_type, rms_delay_spread, max_speed):
                   direction='uplink')
         channel_model = cdl
 
-
     return channel_model
-
 
 
 def generate_batch():
@@ -83,7 +85,7 @@ def generate_batch():
     wavelength = config.SPEED_OF_LIGHT / config.CARRIER_FREQ_HZ  # 1.
     max_speed = max_doppler * wavelength  # 2.
 
-    channel_model = generate_channel_model('train', rms_delay_spread, max_speed)
+    channel_model = generate_channel_model('val', rms_delay_spread, max_speed)
 
     channel = sionna.phy.channel.OFDMChannel(channel_model=channel_model,
                                              resource_grid=ofdm_resource_grid)
@@ -152,8 +154,7 @@ class DeepRxDataset(torch.utils.data.Dataset):
 
         Z = utils.construct_input_tensor(Y, Xp)
 
-        return Z,bits
-
+        return Z, bits
 
     def _open_hdf5(self):
         if self._hdf5_file is None:
@@ -166,24 +167,31 @@ class DeepRxDataset(torch.utils.data.Dataset):
             except Exception:
                 pass
 
-def worker_init_fn(worker_id):
-        worker_info = torch.utils.data.get_worker_info()
-        worker_info.dataset._open_hdf5()
 
-n_samples = 300000
+def worker_init_fn(worker_id):
+    worker_info = torch.utils.data.get_worker_info()
+    worker_info.dataset._open_hdf5()
+
+
+n_samples = 200000
 save_every = 10000
-with h5py.File('/workspace/Datasets/full_training_data.h5', 'w') as f:
-    # initialise datasets first
+
+with h5py.File('/workspace/Datasets/full_validation_data.h5', 'w') as f:
     Y_ds = f.create_dataset('Y', shape=(n_samples, 1, 1, 2, 14, 512), dtype='complex64')
     Xp_ds = f.create_dataset('Xp', shape=(n_samples, 14, 512), dtype='complex64')
     bits_ds = f.create_dataset('bits', shape=(n_samples, 24576), dtype='int32')
 
     print("---- Starting Generation ----")
+    start_time = time.time()
     for i in range(n_samples):
         Y, Xp, bits = generate_batch()
-        Y_ds[i] = Y
-        Xp_ds[i] = Xp
+        Y_ds[i] = Y.cpu()
+        Xp_ds[i] = Xp.cpu()
         bits_ds[i] = bits
-        if i % save_every == 0:
-            print(f"Generated {i}/{n_samples}")
+        if i % save_every == 0 and i > 0:
+            elapsed = time.time() - start_time
+            rate = i / elapsed
+            remaining = (n_samples - i) / rate
+            print(f"Generated {i}/{n_samples} | {rate:.1f} samples/sec | ETA: {remaining / 3600:.1f} hrs")
+
     print("---- Generation Complete ----")
