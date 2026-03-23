@@ -9,7 +9,7 @@ import time
 
 deepRx_model = model.DeepRx(config.N_RX)
 
-train_dataset = dataset.DeepRxDataset('Datasets/training_data.h5')
+train_dataset = dataset.DeepRxDataset('workspace/Datasets/full_training_data.h5')
 train_loader = DataLoader(
     train_dataset,
     batch_size=80,
