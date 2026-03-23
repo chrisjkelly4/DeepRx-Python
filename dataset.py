@@ -83,7 +83,7 @@ def generate_batch():
     wavelength = config.SPEED_OF_LIGHT / config.CARRIER_FREQ_HZ  # 1.
     max_speed = max_doppler * wavelength  # 2.
 
-    channel_model = generate_channel_model('val', rms_delay_spread, max_speed)
+    channel_model = generate_channel_model('train', rms_delay_spread, max_speed)
 
     channel = sionna.phy.channel.OFDMChannel(channel_model=channel_model,
                                              resource_grid=ofdm_resource_grid)
@@ -170,3 +170,20 @@ def worker_init_fn(worker_id):
         worker_info = torch.utils.data.get_worker_info()
         worker_info.dataset._open_hdf5()
 
+n_samples = 300000
+save_every = 10000
+with h5py.File('/workspace/Datasets/full_training_data.h5', 'w') as f:
+    # initialise datasets first
+    Y_ds = f.create_dataset('Y', shape=(n_samples, 1, 1, 2, 14, 512), dtype='complex64')
+    Xp_ds = f.create_dataset('Xp', shape=(n_samples, 14, 512), dtype='complex64')
+    bits_ds = f.create_dataset('bits', shape=(n_samples, 24576), dtype='int32')
+
+    print("---- Starting Generation ----")
+    for i in range(n_samples):
+        Y, Xp, bits = generate_batch()
+        Y_ds[i] = Y
+        Xp_ds[i] = Xp
+        bits_ds[i] = bits
+        if i % save_every == 0:
+            print(f"Generated {i}/{n_samples}")
+    print("---- Generation Complete ----")
