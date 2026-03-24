@@ -29,6 +29,7 @@ class ResNetBlock(nn.Module):
         
     def forward(self, input):
         shortcut = self.shortcut(input)
+
         normalised_input = self.bn1(input)
         a1 = self.relu(normalised_input)
         depth1 = self.depthConv1(a1)
@@ -56,7 +57,6 @@ class DeepRx(nn.Module):
             ResNetBlock(128, 256, (2, 3)),
             ResNetBlock(256, 256, (2, 3)),
             ResNetBlock(256, 256, (3, 6)),
-            ResNetBlock(256, 256, (2, 3)),
             ResNetBlock(256, 128, (2, 3)),
             ResNetBlock(128, 128, (2, 3)),
             ResNetBlock(128, 64, (1, 1)),
