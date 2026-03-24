@@ -172,12 +172,11 @@ def worker_init_fn(worker_id):
     worker_info = torch.utils.data.get_worker_info()
     worker_info.dataset._open_hdf5()
 
-
 if __name__ == '__main__':
     n_samples = 200000
     save_every = 10000
 
-    with h5py.File('/workspace/Datasets/placeholder_data.h5', 'w') as f:
+    with h5py.File('/workspace/Datasets/placholder_data.h5', 'w') as f:
         Y_ds = f.create_dataset('Y', shape=(n_samples, 1, 1, 2, 14, 512), dtype='complex64')
         Xp_ds = f.create_dataset('Xp', shape=(n_samples, 14, 512), dtype='complex64')
         bits_ds = f.create_dataset('bits', shape=(n_samples, 24576), dtype='int32')
@@ -193,6 +192,6 @@ if __name__ == '__main__':
                 elapsed = time.time() - start_time
                 rate = i / elapsed
                 remaining = (n_samples - i) / rate
-                print(f"Generated {i}/{n_samples} | {rate:.1f} samples/sec | ETA: {remaining/3600:.1f} hrs")
+                print(f"Generated {i}/{n_samples} | {rate:.1f} samples/sec | ETA: {remaining / 3600:.1f} hrs")
 
         print("---- Generation Complete ----")
