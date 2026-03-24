@@ -1,6 +1,7 @@
-torch
+torch==2.9.1
 numpy
 h5py
 matplotlib 
 torch-optimizer
-sionna
+sionna==2.0.0
+
