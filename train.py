@@ -9,7 +9,7 @@ import time
 
 deepRx_model = model.DeepRx(config.N_RX)
 
-train_dataset = dataset.DeepRxDataset('workspace/Datasets/full_training_data.h5')
+train_dataset = dataset.DeepRxDataset('/workspace/Datasets/full_training_data.h5')
 train_loader = DataLoader(
     train_dataset,
     batch_size=80,
@@ -24,7 +24,7 @@ loss = torch.nn.BCEWithLogitsLoss()  # used for binary classification, and we ar
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 deepRx_model = deepRx_model.to(device)
 
-pilot_mask = np.load('pilot_mask.npy')
+pilot_mask = np.load('/workspace/pilot_mask.npy')
 
 
 def train_model(max_iterations):
