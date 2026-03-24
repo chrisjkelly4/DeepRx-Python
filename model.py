@@ -29,6 +29,7 @@ class ResNetBlock(nn.Module):
         
     def forward(self, input):
         shortcut = self.shortcut(input)
+
         normalised_input = self.bn1(input)
         a1 = self.relu(normalised_input)
         depth1 = self.depthConv1(a1)
@@ -48,23 +49,22 @@ class DeepRx(nn.Module):
 
         in_channels = 2 * (2 * number_receivers + 1)
 
-        self.ConvIn = nn.Conv2d(in_channels,64,kernel_size=3,padding=1, dilation=(1,1))
+        self.ConvIn = nn.Conv2d(in_channels,64,kernel_size=3,padding=1, dilation=(1,1)) #Conv. In (3,3) (1,1)  Output :(S, F, 64)
         self.resNet_blocks = nn.ModuleList([
-            ResNetBlock(64, 64, (1,1)),
-            ResNetBlock(64, 128, (1, 1)),
-            ResNetBlock(128, 128, (2, 3)),
-            ResNetBlock(128, 256, (2, 3)),
-            ResNetBlock(256, 256, (2, 3)),
-            ResNetBlock(256, 256, (3, 6)),
-            ResNetBlock(256, 256, (2, 3)),
-            ResNetBlock(256, 128, (2, 3)),
-            ResNetBlock(128, 128, (2, 3)),
-            ResNetBlock(128, 64, (1, 1)),
-            ResNetBlock(64, 64, (1, 1)),
-
+            ResNetBlock(64, 64, (1,1)),    #ResNet Block 1 (3,3) (1,1)  Output :(S, F, 64)
+            ResNetBlock(64, 64, (1,1)),    #ResNet Block 2 (3,3) (1,1)  Output :(S, F, 64)
+            ResNetBlock(64, 128, (2, 3)),  #ResNet Block 3 (3,3) (2,3)  Output :(S, F, 128)
+            ResNetBlock(128, 128, (2, 3)), #ResNet Block 4 (3,3) (2,3)  Output :(S, F, 128)
+            ResNetBlock(128, 256, (2, 3)), #ResNet Block 5 (3,3) (2,3)  Output :(S, F, 256)
+            ResNetBlock(256, 256, (3, 6)), #ResNet Block 6 (3,3) (3,6)  Output :(S, F, 256)
+            ResNetBlock(256, 256, (2, 3)), #ResNet Block 7 (3,3) (2,3)  Output :(S, F, 256)
+            ResNetBlock(256, 128, (2, 3)), #ResNet Block 8 (3,3) (2,3)  Output :(S, F, 128)
+            ResNetBlock(128, 128, (2, 3)), #ResNet Block 9 (3,3) (2,3)  Output :(S, F, 128)
+            ResNetBlock(128, 64, (1, 1)),  #ResNet Block 10 (3,3) (1,1)  Output :(S, F, 64)
+            ResNetBlock(64, 64, (1, 1))    #ResNet Block 11 (3,3) (1,1)  Output :(S, F, 64)
         ])
         # channel_size_last_index = CHANNEL_SIZES[-1]
-        self.ConvOut = nn.Conv2d(64 ,4,kernel_size=3,padding=1, dilation=(1,1))
+        self.ConvOut = nn.Conv2d(64 ,4,kernel_size=3,padding=1, dilation=(1,1)) #Conv. Out (3,3) (1,1)  Output :(S, F, 64)
 
     def forward(self, input):
         x = self.ConvIn(input)
