@@ -71,7 +71,7 @@ def train_model(max_iterations):
                 print(
                         f"Iteration {iteration}/{max_iterations} | Loss: {loss_val.item():.4f} | LR: {scheduler.get_last_lr()[0]:.6f} | {rate:.1f} it/sec | ETA: {remaining / 3600:.1f} hrs")
             if iteration % 5000 == 0:
-                torch.save(deepRx_model.state_dict(), f'deeprx_checkpoint_iteration{iteration}.pt')
+                torch.save(deepRx_model.state_dict(), f'/workspace/Training Checkpoints/deeprx_checkpoint_iteration{iteration}.pt')
 
 
 if __name__ == '__main__':
