@@ -56,7 +56,7 @@ def train_model(max_iterations):
 
             # extract data positions only
             data_mask = ~pilot_mask.squeeze().astype(bool)  # True where DATA is flip to get data positions
-            prediction_masked = prediction[:, :, data_mask]  # (10, 4, 6144)
+            prediction_masked = prediction[:, :, data_mask]
             prediction_flat = prediction_masked.permute(0, 2, 1).reshape(Z.shape[0], -1)
 
             loss_val = loss(prediction_flat, bits.float())
@@ -76,5 +76,5 @@ def train_model(max_iterations):
 
 
 if __name__ == '__main__':
-    train_model(max_iterations=3000)
+    train_model(max_iterations=30000)
 
