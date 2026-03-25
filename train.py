@@ -18,7 +18,7 @@ train_loader = DataLoader(
     worker_init_fn=dataset.worker_init_fn,
 )
 
-optimizer = optim.Lamb(deepRx_model.parameters(), lr=1e-3)
+optimizer = optim.Lamb(deepRx_model.parameters(), lr=1e-2, weight_decay=1e-4)
 loss = torch.nn.BCEWithLogitsLoss()  # used for binary classification, and we are predicting bits
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
