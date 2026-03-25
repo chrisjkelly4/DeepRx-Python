@@ -45,7 +45,7 @@ def train_model(max_iterations):
             # extract data positions only
             data_mask = ~pilot_mask.squeeze().astype(bool)  # True where DATA is flip to get data positions
             prediction_masked = prediction[:, :, data_mask]  # (10, 4, 6144)
-            prediction_flat = prediction_masked.reshape(Z.shape[0], -1)  # (10, 24576)
+            prediction_flat = prediction_masked.permute(0, 2, 1).reshape(Z.shape[0], -1)
 
             loss_val = loss(prediction_flat, bits.float())
             loss_val.backward()
@@ -59,14 +59,10 @@ def train_model(max_iterations):
                 print(
                     f"Iteration {iteration}/{max_iterations} | Loss: {loss_val.item():.4f} | {rate:.1f} it/sec | ETA: {remaining / 3600:.1f} hrs")
 
-        if iteration % 5000 == 0:
-            torch.save(deepRx_model.state_dict(), f'deeprx_checkpoint_iteration{iteration}.pt')
+            if iteration % 5000 == 0:
+                torch.save(deepRx_model.state_dict(), f'deeprx_checkpoint_iteration{iteration}.pt')
 
 
 if __name__ == '__main__':
-    train_model(max_iterations=2)
+    train_model(max_iterations=3000)
 
-##import h5py
-##with h5py.File('../../../Desktop/training_data.h5', 'r') as f:
-##    print(f['Y'].shape)
-##    print(f['bits'].shape)
