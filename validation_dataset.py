@@ -173,8 +173,8 @@ def worker_init_fn(worker_id):
     worker_info.dataset._open_hdf5()
 
 if __name__ == '__main__':
-    n_samples = 200000
-    save_every = 10000
+    n_samples = 100
+    save_every = 100
 
     with h5py.File('/workspace/Datasets/full_validation_data.h5', 'w') as f:
         Y_ds = f.create_dataset('Y', shape=(n_samples, 1, 1, 2, 14, 512), dtype='complex64')
