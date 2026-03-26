@@ -136,7 +136,7 @@ def generate_batch():
     return Y, Xp, bit_pattern, snr_db
 
 
-class DeepRxDataset(torch.utils.data.Dataset):
+class DeepRxValDataset(torch.utils.data.Dataset):
     def __init__(self, filepath):
         self.filepath = filepath
         self._hdf5_file = None

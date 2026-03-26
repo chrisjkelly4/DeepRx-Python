@@ -17,3 +17,7 @@ def construct_input_tensor(Y, Xp):
     Z = torch.cat([Z.real, Z.imag], dim=0)
     
     return Z.float()
+
+def group_ber_by_snr(ber_array, snr_array):
+    #placeholder for now
+    return x

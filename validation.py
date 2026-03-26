@@ -3,12 +3,12 @@ import numpy as np
 import model
 import config
 from torch.utils.data import DataLoader
-import dataset
+import validation_dataset as dataset
 import time
 
 deepRx_model = model.DeepRx(config.N_RX)
 
-val_dataset = dataset.DeepRxDataset('/workspace/Datasets/full_validation_data.h5')
+val_dataset = dataset.DeepRxValDataset('/workspace/Datasets/full_validation_data.h5')
 val_loader = DataLoader(
     val_dataset,
     batch_size=80,
@@ -25,17 +25,18 @@ pilot_mask = np.load('/workspace/pilot_mask.npy')
 
 def validate():
     for Z, bits, snr in val_loader:
-        torch.no_grad()
-        Z = Z.to(device)
+        with torch.no_grad():
+            torch.no_grad()
+            Z = Z.to(device)
 
-        bits = bits.to(device)
+            bits = bits.to(device)
 
-        prediction = deepRx_model.forward(Z)
+            prediction = deepRx_model.forward(Z)
 
-        data_mask = ~pilot_mask.squeeze().astype(bool)
-        prediction_masked = prediction[:, :, data_mask]
-        prediction_flat = prediction_masked.permute(0, 2, 1).reshape(Z.shape[0], -1)
+            data_mask = ~pilot_mask.squeeze().astype(bool)
+            prediction_masked = prediction[:, :, data_mask]
+            prediction_flat = prediction_masked.permute(0, 2, 1).reshape(Z.shape[0], -1)
 
-        prediction_threshhold = torch.max(prediction_flat, dim=1)[0]
-        # computer ber
+            prediction_threshhold = torch.max(prediction_flat, dim=1)[0]
+            # computer ber
 
