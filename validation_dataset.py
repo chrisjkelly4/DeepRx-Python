@@ -151,10 +151,10 @@ class DeepRxDataset(torch.utils.data.Dataset):
         Y = torch.tensor(self._hdf5_file['Y'][idx])
         Xp = torch.tensor(self._hdf5_file['Xp'][idx])
         bits = torch.tensor(self._hdf5_file['bits'][idx], dtype=torch.float32)
-
+        snr_db = torch.tensor(self._hdf5_file['snr'][idx], dtype=torch.float32)
         Z = utils.construct_input_tensor(Y, Xp)
 
-        return Z, bits
+        return Z, bits, snr_db
 
     def _open_hdf5(self):
         if self._hdf5_file is None:
