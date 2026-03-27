@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import model
 import config
+import utils
 from torch.utils.data import DataLoader
 import validation_dataset as dataset
 import time
@@ -12,7 +13,7 @@ val_dataset = dataset.DeepRxValDataset('/workspace/Datasets/full_validation_data
 val_loader = DataLoader(
     val_dataset,
     batch_size=80,
-    shuffle=True,
+    shuffle=False, #not valid to shuffle during validation, only aids in training
     num_workers=4,
     worker_init_fn=dataset.worker_init_fn,
 )
@@ -28,7 +29,6 @@ def validate():
     all_snrs = []
     for Z, bits, snr in val_loader:
         with torch.no_grad():
-            torch.no_grad()
             Z = Z.to(device)
 
             bits = bits.to(device)
@@ -42,13 +42,22 @@ def validate():
             predicted_bits = (prediction_flat > 0).float()
 
             # computer ber
-            for i in range (Z.shape[0]):
-                errors = (predicted_bits[i] != bits[i]).sum().item()
-                total_bits = bits[i].numel()
-                ber = errors / total_bits
+            # Below is the general idea implimented as a for loop, but we are able to do there validation code
+            # a little quicker using a some native numpy functions
 
-                all_bers.append(ber.item())
-                all_snrs.append(snr.item())
+            # for i in range (80):
+            #     errors = (predicted_bits[i] != bits[i]).sum().item()
+            #     total_bits = bits[i].numel()
+            #     ber = errors / total_bits
+            #
+            #     all_bers.append(ber.item())
+            #     all_snrs.append(snr.item())
+
+            errors = (predicted_bits != bits)  # shape (80, 24576) - True where wrong
+            bers = errors.sum(dim=1).float() / bits.shape[1]  # shape (80,) - one BER per sample
+
+            all_bers.extend(bers.cpu().numpy().tolist())
+            all_snrs.extend(snr.numpy().tolist())
 
 if __name__ == '__main__':
     validate()
