@@ -68,12 +68,12 @@ def validate():
             remaining = (total_batches - (batch_idx + 1)) / rate
             print(f"Batch {batch_idx + 1}/{total_batches} | ETA: {remaining / 3600:.2f} hrs")
 
-        bin_centres, mean_bers = utils.bin_ber_by_snr(
+        group_centres, mean_bers = utils.group_ber_by_snr(
             np.array(all_snrs),
             np.array(all_bers)
         )
 
-        np.save('/workspace/results/snr_bin_centres.npy', bin_centres)
+        np.save('/workspace/results/snr_group_centres.npy', group_centres)
         np.save('/workspace/results/mean_bers.npy', mean_bers)
         print("Validation complete, results saved.")
 
