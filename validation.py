@@ -25,6 +25,7 @@ deepRx_model.eval()
 pilot_mask = np.load('/workspace/pilot_mask.npy')
 
 def validate():
+    print("Validation started.")
     all_bers = []
     all_snrs = []
     for Z, bits, snr in val_loader:
@@ -59,5 +60,15 @@ def validate():
             all_bers.extend(bers.cpu().numpy().tolist())
             all_snrs.extend(snr.numpy().tolist())
 
+            bin_centres, mean_bers = utils.bin_ber_by_snr(
+                np.array(all_snrs),
+                np.array(all_bers)
+            )
+
+            np.save('/workspace/results/snr_bin_centres.npy', bin_centres)
+            np.save('/workspace/results/mean_bers.npy', mean_bers)
+            print("Validation complete, results saved.")
+
 if __name__ == '__main__':
     validate()
+
