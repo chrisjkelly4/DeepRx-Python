@@ -70,8 +70,9 @@ def validate():
                 print(f"Batch {batch_idx + 1}/{total_batches} | ETA: {remaining / 3600:.2f} hrs")
 
         group_centres, mean_bers = utils.group_ber_by_snr(
-            np.array(all_snrs),
-            np.array(all_bers)
+            np.array(all_bers),
+            np.array(all_snrs)
+
         )
 
         np.save('/workspace/results/snr_group_centres.npy', group_centres)
