@@ -28,8 +28,11 @@ def validate():
     print("Validation started.")
     all_bers = []
     all_snrs = []
-    for Z, bits, snr in val_loader:
-        with torch.no_grad():
+
+    time_start = time.time()
+    total_batches = len(val_loader)
+    with torch.no_grad():
+        for batch_idx, (Z, bits, snr) in enumerate(val_loader):
             Z = Z.to(device)
 
             bits = bits.to(device)
@@ -60,14 +63,19 @@ def validate():
             all_bers.extend(bers.cpu().numpy().tolist())
             all_snrs.extend(snr.numpy().tolist())
 
-            bin_centres, mean_bers = utils.bin_ber_by_snr(
-                np.array(all_snrs),
-                np.array(all_bers)
-            )
+            elapsed = time.time() - time_start
+            rate = (batch_idx + 1) / elapsed  # batches per second
+            remaining = (total_batches - (batch_idx + 1)) / rate
+            print(f"Batch {batch_idx + 1}/{total_batches} | ETA: {remaining / 3600:.2f} hrs")
 
-            np.save('/workspace/results/snr_bin_centres.npy', bin_centres)
-            np.save('/workspace/results/mean_bers.npy', mean_bers)
-            print("Validation complete, results saved.")
+        bin_centres, mean_bers = utils.bin_ber_by_snr(
+            np.array(all_snrs),
+            np.array(all_bers)
+        )
+
+        np.save('/workspace/results/snr_bin_centres.npy', bin_centres)
+        np.save('/workspace/results/mean_bers.npy', mean_bers)
+        print("Validation complete, results saved.")
 
 if __name__ == '__main__':
     validate()
