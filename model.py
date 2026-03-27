@@ -49,7 +49,7 @@ class DeepRx(nn.Module):
 
         # in_channels = 2 * (2 * number_receivers + 1) removed for ablation study
 
-        # removed multiplier of 2 as we no longer hav a hr input, so we dont need thiose extra interpretations from the receivers
+        # removed multiplier of 2 as we no longer hav a hr input, so we don't need those extra interpretations from the receivers
         in_channels = 2 * ( number_receivers + 1)
 
         self.ConvIn = nn.Conv2d(in_channels,64,kernel_size=3,padding=1, dilation=(1,1)) #Conv. In (3,3) (1,1)  Output :(S, F, 64)
