@@ -17,3 +17,19 @@ def construct_input_tensor(Y, Xp):
     Z = torch.cat([Z.real, Z.imag], dim=0)
     
     return Z.float()
+
+def group_ber_by_snr(ber_array, snr_array):
+    NUM_OF_EDGES = 26
+    mean_ber = []
+    group_centers = np.arange(-4, 21, 1)
+
+    group_edges = np.linspace(-4.5, 20.5, NUM_OF_EDGES)
+    grouped_snr = np.digitize(snr_array, group_edges)
+    for i in range (1,NUM_OF_EDGES):
+        mask = grouped_snr == i
+        if mask.sum() > 0:
+            mean_ber.append(ber_array[mask].mean())
+        else:
+            mean_ber.append(np.nan)
+
+    return group_centers, mean_ber
