@@ -40,8 +40,15 @@ def validate():
             prediction_flat = prediction_masked.permute(0, 2, 1).reshape(Z.shape[0], -1)
 
             predicted_bits = (prediction_flat > 0).float()
-            # computer ber
 
+            # computer ber
+            for i in range (Z.shape[0]):
+                errors = (predicted_bits[i] != bits[i]).sum().item()
+                total_bits = bits[i].numel()
+                ber = errors / total_bits
+
+                all_bers.append(ber.item())
+                all_snrs.append(snr.item())
 
 if __name__ == '__main__':
     validate()
