@@ -22,9 +22,6 @@ def construct_input_tensor(Y, Xp):
 
 
 def construct_input_tensor_ablation(Y, Xp):
-    # Compute raw channel estimate
-    Hr = Y * torch.conj(Xp)
-
     # Re-size input tensors
     Y = Y.squeeze(0).squeeze(0)  # remove batch and tx dims
     Xp = Xp.unsqueeze(0)  # add rx dim
