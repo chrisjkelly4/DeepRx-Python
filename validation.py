@@ -66,11 +66,13 @@ def validate():
             elapsed = time.time() - time_start
             rate = (batch_idx + 1) / elapsed  # batches per second
             remaining = (total_batches - (batch_idx + 1)) / rate
-            print(f"Batch {batch_idx + 1}/{total_batches} | ETA: {remaining / 3600:.2f} hrs")
+            if batch_idx % 25 == 0:
+                print(f"Batch {batch_idx + 1}/{total_batches} | ETA: {remaining / 3600:.2f} hrs")
 
         group_centres, mean_bers = utils.group_ber_by_snr(
-            np.array(all_snrs),
-            np.array(all_bers)
+            np.array(all_bers),
+            np.array(all_snrs)
+
         )
 
         np.save('/workspace/results/snr_group_centres.npy', group_centres)
