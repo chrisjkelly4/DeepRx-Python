@@ -152,8 +152,8 @@ class DeepRxDataset(torch.utils.data.Dataset):
         Xp = torch.tensor(self._hdf5_file['Xp'][idx])
         bits = torch.tensor(self._hdf5_file['bits'][idx], dtype=torch.float32)
 
-        Z = utils.construct_input_tensor(Y, Xp)
-
+        # Z = utils.construct_input_tensor(Y, Xp) #removed for ablation study
+        Z = utils.construct_input_tensor_ablation(Y, Xp)
         return Z, bits
 
     def _open_hdf5(self):

@@ -47,7 +47,10 @@ class DeepRx(nn.Module):
 
         # CHANNEL_SIZES = [64, 64, 64, 128, 128, 256, 256, 256, 128, 128, 64, 64]
 
-        in_channels = 2 * (2 * number_receivers + 1)
+        # in_channels = 2 * (2 * number_receivers + 1) removed for ablation study
+
+        # removed multiplier of 2 as we no longer hav a hr input, so we don't need those extra interpretations from the receivers
+        in_channels = 2 * ( number_receivers + 1)
 
         self.ConvIn = nn.Conv2d(in_channels,64,kernel_size=3,padding=1, dilation=(1,1)) #Conv. In (3,3) (1,1)  Output :(S, F, 64)
         self.resNet_blocks = nn.ModuleList([
